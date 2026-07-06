@@ -15,6 +15,16 @@ async function getJson(url) {
       'Cannot reach the Salesforce connector. Start it with `cd server && npm start`.',
     )
   }
+  // 500/502/503/504 from the dev proxy almost always mean nothing is listening
+  // on the connector port — i.e. the backend isn't running.
+  if (res.status >= 500) {
+    const body = await res.json().catch(() => null)
+    throw new Error(
+      body?.message ||
+        'The Salesforce connector is not running on :8787. Start it in a separate ' +
+          'terminal: `cd server && npm install && npm start`.',
+    )
+  }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.message || data.error || `Request failed (${res.status})`)
   return data
