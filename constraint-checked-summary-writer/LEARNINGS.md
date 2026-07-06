@@ -32,9 +32,15 @@
 
 - **The ask check is keyword-coverage, not semantics.** It's deterministic and
   testable (the right call for a hard gate), but a heavily paraphrased ask could
-  slip through or falsely fail. A hybrid — keep the deterministic gate, add a
-  clearly-separate LLM _judge_ for style/semantics (the GOOD-TO-HAVE) — would be
-  the honest next step, kept firmly apart from the formal gate.
+  slip through or falsely fail. The hybrid answer is the style judge I added:
+  keep the deterministic gate for the guarantee, and run a clearly-separate LLM
+  judge for style/opinion — never letting the opinion touch pass/fail.
+
+- **Keeping the judge "advisory" took discipline, not code.** The temptation is
+  to fold a style score into the gate ("also require style ≥ 3"). That quietly
+  re-introduces the exact thing the brief warns against — a model grading
+  correctness. The judge runs only on already-verified output, in its own panel,
+  and cannot change the verdict. That separation is the feature.
 
 - **Proxy the LLM call.** For the demo the browser talks to Anthropic directly;
   production needs a tiny backend so the key never ships to the client. The

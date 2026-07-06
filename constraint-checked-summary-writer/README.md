@@ -138,6 +138,24 @@ first-attempt rate is non-zero; the delta is the point.
 
 ---
 
+## LLM Style Judge (advisory — GOOD-TO-HAVE)
+
+After a summary **passes the deterministic gate**, a separate style judge scores
+it on Concision, Clarity, Directness, and Specificity (1–5 each). It is kept
+deliberately apart from verification:
+
+- It runs **only on accepted (verified) summaries**.
+- It **never affects pass/fail** — the formal gate is `verifiers.js` alone.
+- It is rendered in its own panel, labelled *"advisory · not the gate."*
+
+Like the drafter, it works two ways ([`src/lib/judge.js`](src/lib/judge.js)):
+a deterministic offline heuristic (default, no key, unit-tested) and an optional
+Anthropic judge that returns the same rubric as JSON when a key is configured.
+This is intentionally the *style* opinion, held separate from the *formal*
+guarantee — the whole point of the brief.
+
+---
+
 ## Architecture
 
 ```
@@ -148,6 +166,8 @@ src/
     verifiers.test.js   21 tests incl. the $1.37M-vs-$1.4M rounding case
     generator.js        Offline deterministic drafter + optional Anthropic drafter
     loop.js             generate → verify → retry orchestration (max 5)
+    judge.js            Style judge (advisory) — offline heuristic + optional LLM
+    judge.test.js       Judge unit tests
     samples.js          Fictional, Salesforce-shaped sample deal updates
     metrics.js          Batch runner: first-attempt vs final pass rate
   components/           InputPane, Timeline, ResultCard, MetricsPanel, RulesPanel
@@ -172,4 +192,6 @@ Trust lives entirely in deterministic, tested code.
 - **Honest failure** — exhausted attempts → best attempt + failing checks.
 - **SHOULD** — targeted feedback visible in recorded prompts; batch metrics;
   config-file rules.
-- **GOOD-TO-HAVE** — strict/lenient toggle; constraint composition (must-mention).
+- **GOOD-TO-HAVE** — strict/lenient toggle; constraint composition
+  (must-mention); a separate LLM style judge for verified summaries, kept
+  clearly apart from the formal gate.

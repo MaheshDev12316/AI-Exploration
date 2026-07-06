@@ -4,8 +4,10 @@ import Timeline from './components/Timeline.jsx'
 import ResultCard from './components/ResultCard.jsx'
 import MetricsPanel from './components/MetricsPanel.jsx'
 import RulesPanel from './components/RulesPanel.jsx'
+import JudgePanel from './components/JudgePanel.jsx'
 import { buildRuleset, MAX_ATTEMPTS } from './config/rules.js'
 import { getGenerator, llmAvailable } from './lib/generator.js'
+import { getJudge } from './lib/judge.js'
 import { runLoop } from './lib/loop.js'
 import { DEFAULT_SAMPLE } from './lib/samples.js'
 
@@ -18,6 +20,9 @@ export default function App() {
   const [attempts, setAttempts] = useState([])
   const [result, setResult] = useState(null)
   const [running, setRunning] = useState(false)
+  const [judge, setJudge] = useState(null)
+  const [judgeLoading, setJudgeLoading] = useState(false)
+  const [judgeError, setJudgeError] = useState(null)
 
   const extras = useMemo(
     () => ({
@@ -32,23 +37,32 @@ export default function App() {
 
   const setField = (k, v) => setInput((prev) => ({ ...prev, [k]: v }))
 
+  function clearJudge() {
+    setJudge(null)
+    setJudgeError(null)
+    setJudgeLoading(false)
+  }
+
   function onSelectSample(sample) {
     setSelectedId(sample.id)
     setInput({ ...sample.input })
     setMustMention((sample.extras?.mustMention || []).join(', '))
     setAttempts([])
     setResult(null)
+    clearJudge()
   }
 
   function onReset() {
     setAttempts([])
     setResult(null)
+    clearJudge()
   }
 
   async function onRun() {
     setRunning(true)
     setAttempts([])
     setResult(null)
+    clearJudge()
     const generate = getGenerator(mode)
     try {
       const res = await runLoop({
@@ -60,6 +74,8 @@ export default function App() {
         onAttempt: (_rec, all) => setAttempts(all),
       })
       setResult(res)
+      // Style judge runs ONLY on a verified summary, and never gates it.
+      if (res.passed && res.accepted) runJudge(res.accepted.summary)
     } catch (err) {
       setResult({
         passed: false,
@@ -69,6 +85,23 @@ export default function App() {
       })
     } finally {
       setRunning(false)
+    }
+  }
+
+  async function runJudge(summary) {
+    setJudgeLoading(true)
+    setJudgeError(null)
+    setJudge(null)
+    try {
+      const doJudge = getJudge(mode)
+      // Let the accepted card paint before a (possibly async) judge call.
+      await new Promise((r) => setTimeout(r, 30))
+      const res = await doJudge({ summary, input })
+      setJudge(res)
+    } catch (err) {
+      setJudgeError(String(err.message || err))
+    } finally {
+      setJudgeLoading(false)
     }
   }
 
@@ -147,6 +180,10 @@ export default function App() {
           </div>
 
           {result && <ResultCard result={result} />}
+
+          {result?.passed && (
+            <JudgePanel judge={judge} loading={judgeLoading} error={judgeError} mode={mode} />
+          )}
 
           <MetricsPanel profileKey={profileKey} mode={mode} />
           <RulesPanel ruleset={ruleset} />
