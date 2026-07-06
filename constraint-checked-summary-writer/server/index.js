@@ -73,10 +73,19 @@ app.get('/api/opportunities', asyncRoute(async (req, res) => {
 }))
 
 app.listen(config.port, () => {
-  console.log(
-    `Salesforce connector listening on :${config.port}  [mode=${config.mode}]` +
-      (config.mode === 'mock'
-        ? '  — serving fictional data. Set SF_* creds in server/.env for your Dev org.'
-        : ''),
-  )
+  console.log(`Salesforce connector listening on :${config.port}  [mode=${config.mode}]`)
+  if (config.mode === 'mock') {
+    console.log('  → serving fictional data (no live credentials detected).')
+    console.log(
+      `  → detected in server/.env: SF_USERNAME=${config.salesforce.username ? 'set' : 'MISSING'}, ` +
+        `SF_PASSWORD=${config.salesforce.password ? 'set' : 'MISSING'}, ` +
+        `SF_CLIENT_ID=${config.salesforce.clientId ? 'set' : 'missing'}`,
+    )
+    console.log('  → fix: put SF_USERNAME + SF_PASSWORD in server/.env, then restart.')
+  } else {
+    console.log(
+      `  → auth: ${config.salesforce.clientId ? 'OAuth2 (connected app)' : 'SOAP login'}, ` +
+        `login URL ${config.salesforce.loginUrl}`,
+    )
+  }
 })

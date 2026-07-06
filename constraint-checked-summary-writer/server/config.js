@@ -1,4 +1,11 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+// Load server/.env regardless of the current working directory, so it works
+// whether you run `cd server && npm start` or `node server/index.js` from root.
+const here = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: join(here, '.env') })
 
 const env = process.env
 
