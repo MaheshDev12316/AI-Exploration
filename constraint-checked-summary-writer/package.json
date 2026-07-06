@@ -1,0 +1,23 @@
+{
+  "name": "constraint-checked-summary-writer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TS-05 — An executive-summary generator for deal updates gated by deterministic, code-verified constraints.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.2",
+    "vitest": "^2.0.5"
+  }
+}
