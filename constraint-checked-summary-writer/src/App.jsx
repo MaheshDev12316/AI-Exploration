@@ -5,6 +5,7 @@ import ResultCard from './components/ResultCard.jsx'
 import MetricsPanel from './components/MetricsPanel.jsx'
 import RulesPanel from './components/RulesPanel.jsx'
 import JudgePanel from './components/JudgePanel.jsx'
+import DealPicker from './components/DealPicker.jsx'
 import { buildRuleset, MAX_ATTEMPTS } from './config/rules.js'
 import { getGenerator, llmAvailable } from './lib/generator.js'
 import { getJudge } from './lib/judge.js'
@@ -23,6 +24,8 @@ export default function App() {
   const [judge, setJudge] = useState(null)
   const [judgeLoading, setJudgeLoading] = useState(false)
   const [judgeError, setJudgeError] = useState(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [sourceLabel, setSourceLabel] = useState('')
 
   const extras = useMemo(
     () => ({
@@ -47,9 +50,20 @@ export default function App() {
     setSelectedId(sample.id)
     setInput({ ...sample.input })
     setMustMention((sample.extras?.mustMention || []).join(', '))
+    setSourceLabel('')
     setAttempts([])
     setResult(null)
     clearJudge()
+  }
+
+  function onSelectDeal(deal) {
+    setSelectedId(null)
+    setInput({ raw: '', account: '', amount: '', closeDate: '', ask: '', ...deal.input })
+    setSourceLabel(`${deal.name} (Salesforce)`)
+    setAttempts([])
+    setResult(null)
+    clearJudge()
+    setPickerOpen(false)
   }
 
   function onReset() {
@@ -158,6 +172,8 @@ export default function App() {
             onRun={onRun}
             onReset={onReset}
             running={running}
+            onOpenSalesforce={() => setPickerOpen(true)}
+            sourceLabel={sourceLabel}
           />
         </div>
 
@@ -189,6 +205,12 @@ export default function App() {
           <RulesPanel ruleset={ruleset} />
         </div>
       </div>
+
+      <DealPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={onSelectDeal}
+      />
 
       <div className="footer">
         Verifiers are deterministic, unit-tested code — never LLM self-assessment. &nbsp;·&nbsp;

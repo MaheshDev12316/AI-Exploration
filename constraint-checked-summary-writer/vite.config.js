@@ -7,6 +7,22 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // Proxy API calls to the Salesforce connector (server/).
+    proxy: {
+      '/api': {
+        target: process.env.VITE_CONNECTOR_URL || 'http://localhost:8787',
+        changeOrigin: true,
+      },
+    },
+  },
+  preview: {
+    port: 4173,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_CONNECTOR_URL || 'http://localhost:8787',
+        changeOrigin: true,
+      },
+    },
   },
   test: {
     environment: 'node',

@@ -79,6 +79,57 @@ either way — the model is never asked whether it complied.
 
 ---
 
+## Pull deals from Salesforce (optional, config-gated stretch)
+
+Instead of typing a deal by hand, you can pull a real **Opportunity** from a
+Salesforce **Developer Edition** org. This is an optional, config-gated stretch
+(per the brief: personal Dev org only — never a company/customer/production org).
+The core app never requires it.
+
+```bash
+cd server
+npm install
+cp .env.example .env      # fill in your Dev-org credentials (see below)
+npm start                 # connector on http://localhost:8787
+# in another terminal:
+cd .. && npm run dev      # Vite proxies /api → the connector
+```
+
+Then click **“Pull a deal from Salesforce”** in the app. With **no credentials
+set, the connector runs in MOCK mode** (fictional, Salesforce-shaped data) so the
+whole picker works offline.
+
+**Which deals, out of thousands?** You never load them all — the connector scopes
+server-side with SOQL. Views:
+
+| View | Scope (SOQL) |
+|---|---|
+| **Executive priority** (default) | `IsClosed = false AND CloseDate = THIS_QUARTER`, `ORDER BY Amount DESC`, `LIMIT 25` — the big, near-term open deals that actually need an exec update. Timeframe is switchable (this/next quarter, next 90 days, this year, any). |
+| **By account** | Open opportunities where `Account.Name LIKE '%…%'`. |
+| **My pipeline** | Open deals where `OwnerId =` the signed-in user. |
+| **Recently updated** | Open deals `ORDER BY LastModifiedDate DESC`. |
+
+All views also accept a **stage** filter and a **name/account search**, and
+paginate via `LIMIT`/`OFFSET`. Each Opportunity maps to the loop's fields:
+`Account.Name → account`, `Amount → amount` (exact, unrounded), `CloseDate →
+closeDate`, **`NextStep → the ask`**, and a composed `Description/Stage/NextStep
+→ raw update`. The fact-fidelity verifier then enforces the exact `Amount`
+straight from Salesforce (e.g. `$1,370,000`, never `$1.4M`).
+
+**Credentials** (`server/.env`, never committed): `SF_USERNAME`, `SF_PASSWORD`,
+`SF_SECURITY_TOKEN`. A connected app (`SF_CLIENT_ID`/`SECRET`) is optional — if
+omitted, the connector uses a SOAP login, which is fine for a Dev org.
+
+**Architecture:** `server/` is a small read-only Express + [jsforce] service.
+`soql.js` (the query builder) and `mapping.js` (Opportunity → input) are pure and
+**unit-tested** (`npm test` in `server/`, 11 tests incl. SOQL-injection safety),
+so the live query construction is proven even offline. Inputs are allow-listed,
+numeric params clamped, and free text is SOQL-escaped.
+
+[jsforce]: https://jsforce.github.io/
+
+---
+
 ## The verifiers (algorithms & known limitations)
 
 All verifiers live in [`src/lib/verifiers.js`](src/lib/verifiers.js) as plain,
@@ -170,8 +221,18 @@ src/
     judge.test.js       Judge unit tests
     samples.js          Fictional, Salesforce-shaped sample deal updates
     metrics.js          Batch runner: first-attempt vs final pass rate
-  components/           InputPane, Timeline, ResultCard, MetricsPanel, RulesPanel
+  components/           InputPane, Timeline, ResultCard, MetricsPanel,
+                        RulesPanel, JudgePanel, DealPicker
+  lib/dealsApi.js       Client for the Salesforce connector (/api)
   App.jsx               State + layout
+
+server/                 Optional read-only Salesforce connector (config-gated)
+  soql.js               SOQL builder (pure, unit-tested, injection-safe)
+  mapping.js            Opportunity → loop input (pure, unit-tested)
+  salesforce.js         jsforce connection + live query
+  mock.js               Salesforce-shaped fixture + in-memory query engine
+  index.js              Express API (health, opportunities)
+  soql.test.js          11 tests (query building, escaping, mapping)
 ```
 
 **Design principle:** the generator and verifier know nothing about each other.
@@ -195,3 +256,6 @@ Trust lives entirely in deterministic, tested code.
 - **GOOD-TO-HAVE** — strict/lenient toggle; constraint composition
   (must-mention); a separate LLM style judge for verified summaries, kept
   clearly apart from the formal gate.
+- **STRETCH** — config-gated Salesforce Dev-org connector: pull real
+  Opportunities (executive-priority SOQL, filters, pagination) straight into the
+  loop, with an offline mock mode for demos.

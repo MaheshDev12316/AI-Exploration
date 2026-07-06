@@ -17,11 +17,20 @@ export default function InputPane({
   onRun,
   onReset,
   running,
+  onOpenSalesforce,
+  sourceLabel,
 }) {
   return (
     <div className="stack">
       <div className="panel">
         <div className="pad">
+          <div className="sf-cta">
+            <button className="btn btn-sf" onClick={onOpenSalesforce} disabled={running}>
+              <span className="sf-cloud">☁</span> Pull a deal from Salesforce
+            </button>
+            {sourceLabel && <div className="sf-loaded">Loaded: {sourceLabel}</div>}
+          </div>
+          <div className="divider" style={{ margin: '14px 0' }} />
           <h2>Sample deal updates</h2>
           <div className="samples">
             {SAMPLES.map((s) => (
