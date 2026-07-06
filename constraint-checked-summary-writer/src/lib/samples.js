@@ -54,12 +54,12 @@ export const SAMPLES = [
   },
   {
     id: 'ironbridge-failure',
-    name: 'Ironbridge Capital — Vague close date',
+    name: 'Ironbridge Capital — No firm close date',
     tag: 'Honest failure (no exact date in source)',
     input: {
       account: 'Ironbridge Capital',
       amount: '$3.6M',
-      closeDate: 'end of Q2 2026', // NOT an exact date — cannot be verified
+      closeDate: '', // the source gives no firm date — cannot be verified
       ask: 'need the CRO to sponsor an executive dinner',
       raw:
         'Large new-logo at Ironbridge Capital, $3.6M. The buying committee will not ' +

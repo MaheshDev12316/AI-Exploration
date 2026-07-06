@@ -85,10 +85,9 @@ export default function InputPane({
             <div className="field">
               <label>Close date</label>
               <input
-                type="text"
+                type="date"
                 value={input.closeDate}
                 onChange={(e) => setField('closeDate', e.target.value)}
-                placeholder="2026-03-31"
               />
             </div>
             <div className="field">

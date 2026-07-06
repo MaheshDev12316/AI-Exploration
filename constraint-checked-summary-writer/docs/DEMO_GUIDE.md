@@ -69,7 +69,7 @@ Leave the default **Contoso Global** sample selected → click **Generate → Ve
   **$1,370,000**. “Only verified output ships.”
 
 **2) Honest failure.**
-Select **Ironbridge Capital — Vague close date** → Generate. It runs all 5
+Select **Ironbridge Capital — No firm close date** → Generate. It runs all 5
 attempts and shows the **amber honest-failure card** with the best attempt and the
 one check it couldn’t satisfy. “The source never states an exact close date, so it
 refuses to ship — the opposite of an AI saying ‘looks fine.’”

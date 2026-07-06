@@ -203,6 +203,16 @@ textarea {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  align-items: start; /* don't stretch a shorter field to match a taller one */
+}
+/* keep inputs a consistent height (date/text render identically) */
+input[type="date"] {
+  min-height: 40px;
+  appearance: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
 }
 
 /* ---- buttons ------------------------------------------------------------- */
