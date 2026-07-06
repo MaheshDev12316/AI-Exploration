@@ -11,6 +11,10 @@ failure**.
 Built on the Next Quarter world (accounts, pipeline, forecasts). All data is
 fictional.
 
+> **Demoing this?** See [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) for a
+> run-of-show, and open [`docs/DEMO_DECK.html`](docs/DEMO_DECK.html) in a browser
+> for the slide deck.
+
 ---
 
 ## What it does
