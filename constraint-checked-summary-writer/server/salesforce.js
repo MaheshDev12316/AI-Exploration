@@ -18,23 +18,35 @@ let connPromise = null
 async function connect() {
   const sf = config.salesforce
   const password = `${sf.password}${sf.securityToken || ''}`
+  const useOAuth = Boolean(sf.clientId && sf.clientSecret)
 
-  if (sf.clientId && sf.clientSecret) {
-    // OAuth2 username-password grant against a connected app.
-    const oauth2 = new jsforce.OAuth2({
-      loginUrl: sf.loginUrl,
-      clientId: sf.clientId,
-      clientSecret: sf.clientSecret,
-    })
-    const conn = new jsforce.Connection({ oauth2, version: sf.apiVersion })
+  // With a connected app, login() uses the OAuth2 username-password grant;
+  // without one it uses SOAP login (disabled by default in newer orgs).
+  const conn = useOAuth
+    ? new jsforce.Connection({
+        oauth2: {
+          loginUrl: sf.loginUrl,
+          clientId: sf.clientId,
+          clientSecret: sf.clientSecret,
+        },
+        version: sf.apiVersion,
+      })
+    : new jsforce.Connection({ loginUrl: sf.loginUrl, version: sf.apiVersion })
+
+  try {
     await conn.login(sf.username, password)
     return conn
+  } catch (err) {
+    if (/SOAP API login\(\) is disabled/i.test(err.message) && !useOAuth) {
+      throw new Error(
+        'SOAP API login is disabled in this org (common for new Dev orgs). ' +
+          'Create a Connected App, set SF_CLIENT_ID and SF_CLIENT_SECRET in server/.env, ' +
+          'and enable "Allow OAuth Username-Password Flows" under Setup → OAuth and OpenID ' +
+          'Connect Settings. See the README (Salesforce setup).',
+      )
+    }
+    throw err
   }
-
-  // SOAP login (no connected app required) — good enough for a Dev org.
-  const conn = new jsforce.Connection({ loginUrl: sf.loginUrl, version: sf.apiVersion })
-  await conn.login(sf.username, password)
-  return conn
 }
 
 /** Get (and cache) an authenticated connection; retries once on failure. */

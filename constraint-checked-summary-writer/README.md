@@ -117,8 +117,22 @@ closeDate`, **`NextStep → the ask`**, and a composed `Description/Stage/NextSt
 straight from Salesforce (e.g. `$1,370,000`, never `$1.4M`).
 
 **Credentials** (`server/.env`, never committed): `SF_USERNAME`, `SF_PASSWORD`,
-`SF_SECURITY_TOKEN`. A connected app (`SF_CLIENT_ID`/`SECRET`) is optional — if
-omitted, the connector uses a SOAP login, which is fine for a Dev org.
+`SF_SECURITY_TOKEN`, and — for any recent org — a connected app
+(`SF_CLIENT_ID`/`SF_CLIENT_SECRET`).
+
+> **Newer orgs disable SOAP API login** (you'll see `SOAP API login() is
+> disabled`). Use OAuth instead — a one-time, ~5-minute setup:
+>
+> 1. **Create a Connected App:** Setup → *App Manager* → **New Connected App**.
+>    Enable OAuth Settings; Callback URL `http://localhost:8787/callback`; add
+>    scopes **api** and **refresh_token, offline_access**; Save (allow a few
+>    minutes to propagate).
+> 2. **Get keys:** open the app → *Manage Consumer Details* → copy the
+>    **Consumer Key** (`SF_CLIENT_ID`) and **Consumer Secret** (`SF_CLIENT_SECRET`).
+> 3. **Enable the flow:** Setup → *OAuth and OpenID Connect Settings* → turn on
+>    **Allow OAuth Username-Password Flows**.
+> 4. Add `SF_CLIENT_ID`/`SF_CLIENT_SECRET` to `server/.env` and restart. The
+>    connector then authenticates via the OAuth2 password grant instead of SOAP.
 
 **Architecture:** `server/` is a small read-only Express + [jsforce] service.
 `soql.js` (the query builder) and `mapping.js` (Opportunity → input) are pure and
